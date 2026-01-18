@@ -158,7 +158,7 @@ async def list_tools() -> list[Tool]:
             name="observe",
             description=(
                 "Returns current cube state. Use this after creating a session or making moves "
-                "to see the result. Different formats available: state string, face arrays, or descriptions."
+                "to see the result. Different formats available: state string, face arrays, descriptions, or 3D ASCII grid."
             ),
             inputSchema={
                 "type": "object",
@@ -169,8 +169,8 @@ async def list_tools() -> list[Tool]:
                     },
                     "format": {
                         "type": "string",
-                        "enum": ["state", "faces", "descriptions"],
-                        "description": "Output format. 'state' = color string, 'faces' = 6 face arrays, 'descriptions' = natural language. Default: state.",
+                        "enum": ["state", "faces", "descriptions", "grid"],
+                        "description": "Output format. 'state' = color string, 'faces' = 6 face arrays, 'descriptions' = natural language, 'grid' = 3D ASCII visualization. Default: state.",
                         "default": "state",
                     },
                     "include_move_count": {
@@ -415,6 +415,57 @@ async def handle_observe(args: dict[str, Any]) -> list[TextContent]:
             descriptions.append(f"The {face_names[face_enum]} face is {dominant_color}")
 
         result["description"] = ". ".join(descriptions) + "."
+        result["is_solved"] = session.cube.is_done()
+    elif format_type == "grid":
+        # Return 3D ASCII grid layout matching magiccube's str() output without ANSI codes
+        # Map faces for grid layout order: U, then (F,R,B,L), then D
+        # This matches the unfolded cube visualization
+        all_faces = session.cube.get_all_faces()
+
+        def _format_face_row(face_enum: Face, row_idx: int) -> str:
+            """Format a single row of a face."""
+            row = all_faces.get(face_enum)[row_idx]
+            chars = [color_to_char[color] for color in row]
+            return " ".join(chars)
+
+        # Build grid layout
+        # U face (centered)
+        u_row1 = _format_face_row(Face.U, 0)
+        u_row2 = _format_face_row(Face.U, 1)
+        u_row3 = _format_face_row(Face.U, 2)
+        u_face = f"         {u_row1}\n         {u_row2}\n         {u_row3}\n"
+
+        # Middle faces (F, R, B, L side by side)
+        f_row1 = _format_face_row(Face.F, 0)
+        f_row2 = _format_face_row(Face.F, 1)
+        f_row3 = _format_face_row(Face.F, 2)
+        r_row1 = _format_face_row(Face.R, 0)
+        r_row2 = _format_face_row(Face.R, 1)
+        r_row3 = _format_face_row(Face.R, 2)
+        b_row1 = _format_face_row(Face.B, 0)
+        b_row2 = _format_face_row(Face.B, 1)
+        b_row3 = _format_face_row(Face.B, 2)
+        l_row1 = _format_face_row(Face.L, 0)
+        l_row2 = _format_face_row(Face.L, 1)
+        l_row3 = _format_face_row(Face.L, 2)
+
+        middle_face = (
+            f"         {f_row1}         {r_row1}\n"
+            f"         {f_row2}         {r_row2}\n"
+            f"         {f_row3}         {r_row3}\n"
+            f"         {b_row1}         {l_row1}\n"
+            f"         {b_row2}         {l_row2}\n"
+            f"         {b_row3}         {l_row3}\n"
+        )
+
+        # D face (centered)
+        d_row1 = _format_face_row(Face.D, 0)
+        d_row2 = _format_face_row(Face.D, 1)
+        d_row3 = _format_face_row(Face.D, 2)
+        d_face = f"         {d_row1}\n         {d_row2}\n         {d_row3}\n"
+
+        grid = u_face + middle_face + d_face
+        result["grid"] = grid
         result["is_solved"] = session.cube.is_done()
 
     if include_move_count:

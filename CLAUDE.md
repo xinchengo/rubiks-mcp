@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Note that the Python virtual environment in this repository is managed by `uv` and you should use `uv pip` instead of `pip`
+
 ## Project Overview
 
 Rubik's Cube MCP Server - A Model Context Protocol (MCP) server that exposes a Rubik's Cube environment for evaluating LLM sequential reasoning and pattern recognition capabilities.
@@ -98,3 +100,4 @@ Cube state is represented as 54-character string for 3x3x3 (6 faces × 9 sticker
 - The magiccube library uses enums (Color, Face) that require string conversion in output
 - Session state persists only for the server process lifetime - restarting clears all sessions
 - GLM API key must be set in `GLM_API_KEY` environment variable before running demo
+- Check the user's operation system before editing files, when editing in WSL2, make sure to use relative path and forward slashes `/`, when you encountered errors like `Failed Writing/Reading File`, please check on these issues
