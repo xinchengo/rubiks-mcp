@@ -1,0 +1,16 @@
+[project]
+name = "rubiks-mcp"
+version = "0.1.0"
+description = "MCP server for Rubik's Cube environment for testing LLM reasoning"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "magiccube>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+rubiks-mcp = "rubiks_mcp.server:main"
